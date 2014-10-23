@@ -136,7 +136,9 @@ void test_io()
 
 int main()
 {
-    std::cout << lint(0) << std::endl;
+    lint t;
+    std::cin >> t;
+    std::cout << t << std::endl;
 
     return 0;
 }
