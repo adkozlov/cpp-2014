@@ -531,45 +531,48 @@ lint lint::operator>>(int shift) const
     return lint(*this) >>= shift;
 }
 
-std::istream& operator>>(std::istream &is, lint &value)
+namespace apa
 {
-    while (std::isspace(is.peek()))
+    std::istream& operator>>(std::istream &is, lint &value)
     {
-        is.get();
-    }
+        while (std::isspace(is.peek()))
+        {
+            is.get();
+        }
 
-    std::ostringstream ss;
+        std::ostringstream ss;
 
-    if (is.peek() == '-' || is.peek() == '+')
-    {
-        char sign;
-        is.get(sign);
-        ss << sign;
-    }
+        if (is.peek() == '-' || is.peek() == '+')
+        {
+            char sign;
+            is.get(sign);
+            ss << sign;
+        }
 
-    if (!isdigit(is.peek()))
-    {
-        is.setstate(std::ios_base::badbit);
+        if (!isdigit(is.peek()))
+        {
+            is.setstate(std::ios_base::badbit);
+            return is;
+        }
+
+        while (isdigit(is.peek()))
+        {
+            char temp;
+            is.get(temp);
+            ss << temp;
+        }
+
+        value = lint(ss.str());
+
         return is;
     }
 
-    while (isdigit(is.peek()))
+    std::ostream& operator<<(std::ostream &os, lint const &value)
     {
-        char temp;
-        is.get(temp);
-        ss << temp;
+        os << value.to_string();
+
+        return os;
     }
-
-    value = lint(ss.str());
-
-    return is;
-}
-
-std::ostream& operator<<(std::ostream &os, lint const& value)
-{
-    os << value.to_string();
-
-    return os;
 }
 
 void lint::normalize()
@@ -659,67 +662,67 @@ void lint::cut_zeroes()
     }
 }
 
-lint abs(lint const& value)
+lint apa::abs(lint const& value)
 {
     return value.abs();
 }
 
-lint pow(lint const& value, long_t power)
+lint apa::pow(lint const& value, long_t power)
 {
     return value.pow(power);
 }
 
-bool operator<(int value, lint const& other)
+bool apa::operator<(int value, lint const& other)
 {
     return other > value;
 }
 
-bool operator>(int value, lint const& other)
+bool apa::operator>(int value, lint const& other)
 {
     return other < value;
 }
 
-bool operator<=(int value, lint const& other)
+bool apa::operator<=(int value, lint const& other)
 {
     return other >= value;
 }
 
-bool operator>=(int value, lint const& other)
+bool apa::operator>=(int value, lint const& other)
 {
     return other <= value;
 }
 
-bool operator==(int value, lint const& other)
+bool apa::operator==(int value, lint const& other)
 {
     return other == value;
 }
 
-bool operator!=(int value, lint const& other)
+bool apa::operator!=(int value, lint const& other)
 {
     return other != value;
 }
 
-lint operator+(int value, lint const& other)
+lint apa::operator+(int value, lint const& other)
 {
     return lint(value) + other;
 }
 
-lint operator-(int value, lint const& other)
+lint apa::operator-(int value, lint const& other)
 {
     return lint(value) - other;
 }
 
-lint operator*(int value, lint const& other)
+lint apa::operator*(int value, lint const& other)
 {
     return lint(value) * other;
 }
 
-lint operator/(int value, lint const& other)
+lint apa::operator/(int value, lint const& other)
 {
     return lint(value) / other;
 }
 
-lint operator%(int value, lint const& other)
+lint apa::operator%(int value, lint const& other)
 {
     return lint(value) % other;
 }
