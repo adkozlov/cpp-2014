@@ -39,6 +39,8 @@ void failed_conversions_test()
     //ordinary = x; // must be compilation error!
     //x = str; // must be compilation error!
     //str = x; // must be compilation error!
+
+    std::cout << ordinary << std::endl;
 }
 
 void test_comparison()
@@ -55,6 +57,8 @@ void test_comparison()
     check = long_int1 == long_int2;
     check = 5 <= long_int2;
     check = long_int1 >= 6;
+
+    std::cout << check << std::endl;
 }
 
 void test_check()
@@ -110,6 +114,8 @@ void test_free_func()
     apa::lint a = -42;
     bool check = (-a == abs(a));
 
+    std::cout << check << std::endl;
+
     apa::lint c = pow(a, 0);
 }
 
@@ -124,6 +130,8 @@ void test_io()
     s >> b;
 
     bool check = a == b;
+
+    std::cout << check << std::endl;
 }
 
 int main()

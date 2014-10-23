@@ -1,21 +1,15 @@
 CPP=g++-4.8
-CPP_FLAGS=-std=c++11
+CPP_FLAGS=-std=c++11 -Wall -Werror
 
-all: main
+SRC_DIR=src
+BIN_DIR=bin
 
-main: vector_t.o lint.o main.o
-	$(CPP) $(CPP_FLAGS) vector_t.o lint.o main.o -o main
+all: $(BIN_DIR)/main
 
-vector_t.o: vector_t.h vector_t.cpp
-	$(CPP) $(CPP_FLAGS) -c vector_t.cpp -o vector_t.o
-
-lint.o: lint.h lint.cpp vector_t.h
-	$(CPP) $(CPP_FLAGS) -c lint.cpp -o lint.o
-
-main.o: main.cpp lint.h
-	$(CPP) $(CPP_FLAGS) -c main.cpp -o main.o
+$(BIN_DIR)/main: vector_t.h vector_t.cpp lint.h lint.cpp main.cpp
+	$(CPP) $(CPP_FLAGS) vector_t.cpp lint.cpp main.cpp -o $(BIN_DIR)/main
 
 clean:
-	rm -f *.o main
+	rm -rf $(BIN_DIR)/
 
 .PHONY: clean
