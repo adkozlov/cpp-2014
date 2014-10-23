@@ -1,5 +1,4 @@
-﻿#include <Python/Python.h>
-#include "lint.h"
+﻿#include "lint.h"
 
 using apa::lint;
 
