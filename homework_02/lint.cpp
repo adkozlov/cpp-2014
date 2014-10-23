@@ -1,32 +1,33 @@
-﻿#include "lint.h"
+﻿#include <Python/Python.h>
+#include "lint.h"
 
 using apa::lint;
 
 lint::lint()
-        : shift_(0)
-        , is_negative_(false)
+    : shift_(0)
+    , is_negative_(false)
 {
     digits_.push_back(0);
 }
 
 lint::lint(int digit)
-        : shift_(0)
-        , is_negative_(digit < 0)
+    : shift_(0)
+    , is_negative_(digit < 0)
 {
     digits_.push_back(std::abs(digit));
 }
 
 lint::lint(long_t digit)
-        : shift_(0)
-        , is_negative_(digit < 0)
+    : shift_(0)
+    , is_negative_(digit < 0)
 {
     digits_.push_back(std::abs(digit));
 }
 
 lint::lint(const lint& value)
-        : digits_(value.digits_)
-        , shift_(value.shift_)
-        , is_negative_(value.is_negative_)
+    : digits_(value.digits_)
+    , shift_(value.shift_)
+    , is_negative_(value.is_negative_)
 {
 }
 
@@ -129,6 +130,36 @@ lint& lint::operator=(lint const& value)
 lint lint::abs() const
 {
     return (is_negative_ ? -*this : *this);
+}
+
+
+lint lint::pow(long_t power) const
+{
+    if (power < 0)
+    {
+        return lint(0);
+    }
+    else if (power == 1)
+    {
+        return lint(1);
+    }
+
+    lint result = 1;
+    lint temp = *this;
+
+    while (power)
+    {
+        if (power & 1)
+        {
+            result *= temp;
+        }
+
+        temp *= temp;
+        power >>= 1;
+    }
+
+
+    return result;
 }
 
 int lint::compare_to(lint const& value) const
@@ -411,6 +442,41 @@ lint lint::operator-() const
     return result;
 }
 
+lint lint::operator+() const
+{
+    return *this;
+}
+
+lint& lint::operator++()
+{
+    *this += 1;
+
+    return *this;
+}
+
+lint lint::operator++(int)
+{
+    lint result = *this;
+    *this += 1;
+
+    return result;
+}
+
+lint& lint::operator--()
+{
+    *this -= 1;
+
+    return *this;
+}
+
+lint lint::operator--(int)
+{
+    lint result = *this;
+    *this -= 1;
+
+    return result;
+}
+
 std::pair<lint, lint> lint::quotient_and_remainder(lint const& value) const
 {
     lint a = this->abs();
@@ -597,4 +663,64 @@ void lint::cut_zeroes()
 lint abs(lint const& value)
 {
     return value.abs();
+}
+
+lint pow(lint const& value, long_t power)
+{
+    return value.pow(power);
+}
+
+bool operator<(int value, lint const& other)
+{
+    return other > value;
+}
+
+bool operator>(int value, lint const& other)
+{
+    return other < value;
+}
+
+bool operator<=(int value, lint const& other)
+{
+    return other >= value;
+}
+
+bool operator>=(int value, lint const& other)
+{
+    return other <= value;
+}
+
+bool operator==(int value, lint const& other)
+{
+    return other == value;
+}
+
+bool operator!=(int value, lint const& other)
+{
+    return other != value;
+}
+
+lint operator+(int value, lint const& other)
+{
+    return lint(value) + other;
+}
+
+lint operator-(int value, lint const& other)
+{
+    return lint(value) - other;
+}
+
+lint operator*(int value, lint const& other)
+{
+    return lint(value) * other;
+}
+
+lint operator/(int value, lint const& other)
+{
+    return lint(value) / other;
+}
+
+lint operator%(int value, lint const& other)
+{
+    return lint(value) % other;
 }

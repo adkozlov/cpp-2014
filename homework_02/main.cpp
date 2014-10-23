@@ -36,9 +36,9 @@ void failed_conversions_test()
 
     lint x = 5;
 
-    ordinary = x; // must be compilation error!
-//    x = str; // must be compilation error!
-//    str = x; // must be compilation error!
+    //ordinary = x; // must be compilation error!
+    //x = str; // must be compilation error!
+    //str = x; // must be compilation error!
 }
 
 void test_comparison()
@@ -68,10 +68,10 @@ void test_inc_n_dec()
 {
     lint x = 42;
 
-    lint y = x;//++x;
+    lint y = ++x;
     assert(y == 42 && x == 43);
 
-    y = x;//x--;
+    y = x--;
     assert(y == 43 && x == 42);
 }
 
