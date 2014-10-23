@@ -1,8 +1,7 @@
 #pragma once
 
 #include <iostream>
-
-typedef long long long_t;
+#include <stdexcept>
 
 class vector_t
 {

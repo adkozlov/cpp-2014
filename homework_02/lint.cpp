@@ -76,13 +76,14 @@ std::string lint::to_string() const
         sstream << "-";
     }
 
-    for (int i = digits_.size() - 1; i >= 0; i--)
+    int size = digits_.size();
+    for (int i = size - 1; i >= 0; i--)
     {
         std::ostringstream out;
         out << digits_[i];
         std::string str = out.str();
 
-        if (i != digits_.size() - 1)
+        if (i != size - 1)
         {
             int count = lint::BASE_LENGTH - str.length();
             for (int i = 0; i < count; i++)
@@ -101,6 +102,11 @@ std::string lint::to_string() const
     }
 
     return sstream.str();
+}
+
+lint::operator int() const
+{
+    return digits_[digits_.size() - 1];
 }
 
 lint::operator bool() const

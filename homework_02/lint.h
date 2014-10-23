@@ -8,13 +8,12 @@
 
 #include "vector_t.h"
 
+typedef long long long_t;
+
 namespace apa
 {
     class lint
     {
-    private:
-        typedef long long long_t;
-
     public:
         lint();
 
@@ -27,6 +26,7 @@ namespace apa
         lint(lint const&);
         lint &operator=(lint const&);
 
+	explicit operator int() const;
         operator bool() const;
 
         lint abs() const;
