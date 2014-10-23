@@ -212,13 +212,13 @@ lint& lint::operator+=(lint const& value)
     }
     if (is_negative_ && !value.is_negative_)
     {
-        lint temp = (*this).abs();
+        lint temp = abs();
         *this = value;
         return *this -= temp;
     }
     if (is_negative_ && value.is_negative_)
     {
-        *this = (*this).abs();
+        *this = abs();
         *this += value.abs();
         *this = -(*this);
         return *this;
@@ -260,12 +260,12 @@ lint& lint::operator-=(lint const& value)
     }
     if (is_negative_ && !value.is_negative_)
     {
-        *this = -((*this).abs() + value);
+        *this = -(abs() + value);
         return *this;
     }
     if (is_negative_ && value.is_negative_)
     {
-        *this = value.abs() - (*this).abs();
+        *this = value.abs() - abs();
         return *this;
     }
 
