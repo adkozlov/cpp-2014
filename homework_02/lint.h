@@ -26,10 +26,11 @@ namespace apa
         lint(lint const&);
         lint &operator=(lint const&);
 
-	explicit operator int() const;
-        operator bool() const;
+	    explicit operator int() const;
+        explicit operator bool() const;
 
         lint abs() const;
+        lint operator+() const;
         lint operator-() const;
 
         lint pow(long_t) const;
@@ -43,17 +44,23 @@ namespace apa
 
         lint& operator+=(lint const&);
         lint& operator-=(lint const&);
-        lint& operator*=(long long);
+        lint& operator*=(long_t);
         lint& operator*=(lint const&);
         lint& operator/=(lint const&);
         lint& operator%=(lint const&);
 
         lint operator+(lint const&) const;
         lint operator-(lint const&) const;
-        lint operator*(long long) const;
+        lint operator*(long_t) const;
         lint operator*(lint const&) const;
         lint operator/(lint const&) const;
         lint operator%(lint const&) const;
+
+        lint& operator++();
+        lint operator++(int);
+
+        lint& operator--();
+        lint operator--(int);
 
         friend std::istream& operator>>(std::istream &, lint&);
         friend std::ostream& operator<<(std::ostream &, lint const&);
@@ -72,7 +79,6 @@ namespace apa
         void cut_zeroes();
 
         long_t find_divisor(lint const&) const;
-
         std::pair<lint, lint> quotient_and_remainder(lint const&) const;
 
         lint& operator<<=(int);
@@ -84,4 +90,17 @@ namespace apa
 
     lint abs(lint const&);
     lint pow(lint const&, long_t);
+
+    bool operator<(int, lint const&);
+    bool operator>(int, lint const&);
+    bool operator<=(int, lint const&);
+    bool operator>=(int, lint const&);
+    bool operator==(int, lint const&);
+    bool operator!=(int, lint const&);
+
+    lint operator+(int, lint const&);
+    lint operator-(int, lint const&);
+    lint operator*(int, lint const&);
+    lint operator/(int, lint const&);
+    lint operator%(int, lint const&);
 } // arbitrary-precision arithmetic
