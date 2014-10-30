@@ -3,17 +3,35 @@
 using apa::lint;
 
 lint::lint()
-    : shift_(0)
-    , is_negative_(false)
+    : lint(0)
 {
-    digits_.push_back(0);
 }
 
 lint::lint(int digit)
-    : shift_(0)
-    , is_negative_(digit < 0)
+    : lint((long_t) digit)
 {
-    digits_.push_back(std::abs(digit));
+}
+
+lint::lint(double value)
+    : shift_(0)
+    , is_negative_(value < 0)
+{
+    value = std::abs(value);
+
+    if (value >= 1)
+    {
+        while (value >= 1)
+        {
+            digits_.push_back(remainder(value, BASE));
+            value /= BASE;
+        }
+    }
+    else
+    {
+        digits_.push_back(0);
+    }
+
+    cut_zeroes();
 }
 
 lint::lint(long_t digit)
@@ -30,7 +48,9 @@ lint::lint(const lint& value)
 {
 }
 
-lint::lint(std::string const& str) : shift_(0), is_negative_(false)
+lint::lint(std::string const& str)
+    : shift_(0)
+    , is_negative_(false)
 {
     int begin = 0;
 
@@ -478,6 +498,11 @@ lint lint::operator--(int)
 
 std::pair<lint, lint> lint::quotient_and_remainder(lint const& value) const
 {
+    if (!value)
+    {
+        throw std::overflow_error("Division by zero exception");
+    }
+
     lint a = this->abs();
     lint b = value.abs();
     lint result;

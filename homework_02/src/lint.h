@@ -1,10 +1,12 @@
 #pragma once
 
+#include <stdexcept>
 #include <iostream>
 #include <sstream>
 #include <string>
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 
 #include "vector_t.h"
 
@@ -18,6 +20,7 @@ namespace apa
         lint();
 
         lint(int);
+        explicit lint(double);
         explicit lint(long_t);
         explicit lint(std::string const&);
 
