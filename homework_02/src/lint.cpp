@@ -412,7 +412,7 @@ std::pair<lint, lint> lint::quotient_and_remainder(lint const& value) const
         throw std::overflow_error("Division by zero exception");
     }
 
-    lint a = this->abs();
+    lint a = abs();
     lint b = value.abs();
     lint result;
 
@@ -425,15 +425,10 @@ std::pair<lint, lint> lint::quotient_and_remainder(lint const& value) const
         result <<= 1;
         result += lint(k);
 
-        std::cout << b * k << " ";
-
         a -= b * k;
-
-        std::cout << a << std::endl;
         b >>= 1;
         shift--;
     }
-    std::cout << result << std::endl;
 
     if (shift + 1 > 0)
     {
@@ -441,8 +436,13 @@ std::pair<lint, lint> lint::quotient_and_remainder(lint const& value) const
     }
     result.cut_zeroes();
 
+    if (*this < 0)
+    {
+        result += 1;
+        a = value.abs() - a;
+    }
+
     result.is_negative_ = (result != lint(0)) && (is_negative_ != value.is_negative_);
-    a.is_negative_ = (a != lint(0)) && is_negative_;
 
     return std::make_pair(result, a);
 }
