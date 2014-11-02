@@ -24,7 +24,7 @@ static void test_conversions()
     ordinary = static_cast<int>(long_int); // ok
     std::string s("-15");
     lint z(s);
-    z.to_string() == s;
+    std::cout << (z.to_string() == s) << std::endl;
     (void)test_conversions;
 }
 
@@ -53,7 +53,7 @@ static void test_comparison()
     check = long_int1 == long_int2;
     check = 5 <= long_int2;
     check = long_int1 >= 6;
-    assert(check);
+    assert(!check);
     (void)test_comparison;
 }
 
@@ -84,7 +84,8 @@ static void test_op_n_eq()
     a += b;
     c /= a;
     c -= c;
-    a /= c; // division by zero
+
+//    a /= c; // division by zero
     (void)test_op_n_eq;
 }
 
@@ -98,7 +99,7 @@ static void test_bin_op()
     c = a + b;
     c = c / a;
     c = c + (-c);
-    c = a / c; // division by zero
+//    c = a / c; // division by zero
     c = +c;
     assert(d); //avoid warning
     (void)test_bin_op;
@@ -134,9 +135,23 @@ static void test_io()
 
 int main()
 {
-    lint l(-2.34e20);
-    l /= 1;
-    std::cout << l << std::endl;
+    test_construction();
+    test_conversions();
+    failed_conversions_test();
+    test_comparison();
+    test_check();
+    test_inc_n_dec();
+    test_op_n_eq();
+    test_bin_op();
+    test_free_func();
+    test_io();
+
+    lint a("-100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001");
+    lint b("9999999999999999931398190359470212947659194368");
+
+    a /= b;
+
+    std::cout << a << std::endl;
 
     return 0;
 }

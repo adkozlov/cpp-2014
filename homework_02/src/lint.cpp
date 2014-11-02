@@ -41,13 +41,6 @@ lint::lint(long_t digit)
     digits_.push_back(std::abs(digit));
 }
 
-lint::lint(const lint& value)
-    : digits_(value.digits_)
-    , shift_(value.shift_)
-    , is_negative_(value.is_negative_)
-{
-}
-
 lint::lint(std::string const& str)
     : shift_(0)
     , is_negative_(false)
@@ -74,7 +67,7 @@ lint::lint(std::string const& str)
             counter = 0;
         }
 
-        int d = (str[i] - '0');
+        long_t d = (str[i] - '0');
         for (size_t i = 0; i < counter; i++)
         {
             d *= 10;
@@ -126,24 +119,18 @@ std::string lint::to_string() const
 
 lint::operator int() const
 {
-    return digits_[digits_.size() - 1];
+    long result = digits_[0];
+    if(digits_.size() > 1)
+    {
+        result += digits_[1] * BASE;
+    }
+
+    return is_negative_ ? -result : result;
 }
 
 lint::operator bool() const
 {
     return *this != lint(0);
-}
-
-lint& lint::operator=(lint const& value)
-{
-    if (this != &value)
-    {
-        is_negative_ = value.is_negative_;
-        shift_ = value.shift_;
-        digits_ = value.digits_;
-    }
-
-    return *this;
 }
 
 lint lint::abs() const
@@ -223,36 +210,6 @@ int lint::compare_to(lint const& value) const
         }
     }
     return 0;
-}
-
-bool lint::operator<(lint const& value) const
-{
-    return compare_to(value) < 0;
-}
-
-bool lint::operator>(lint const& value) const
-{
-    return compare_to(value) > 0;
-}
-
-bool lint::operator<=(lint const& value) const
-{
-    return compare_to(value) <= 0;
-}
-
-bool lint::operator>=(lint const& value) const
-{
-    return compare_to(value) >= 0;
-}
-
-bool lint::operator==(lint const& value) const
-{
-    return compare_to(value) == 0;
-}
-
-bool lint::operator!=(lint const& value) const
-{
-    return compare_to(value) != 0;
 }
 
 lint& lint::operator+=(lint const& value)
@@ -405,54 +362,6 @@ lint& lint::operator%=(lint const& value)
     return *this;
 }
 
-lint lint::operator+(lint const& value) const
-{
-    lint result = *this;
-    result += value;
-
-    return result;
-}
-
-lint lint::operator-(lint const& value) const
-{
-    lint result = *this;
-    result -= value;
-
-    return result;
-}
-
-lint lint::operator*(long_t value) const
-{
-    lint result = *this;
-    result *= value;
-
-    return result;
-}
-
-lint lint::operator*(lint const& value) const
-{
-    lint result = *this;
-    result *= value;
-
-    return result;
-}
-
-lint lint::operator/(lint const& value) const
-{
-    lint result = *this;
-    result /= value;
-
-    return result;
-}
-
-lint lint::operator%(lint const& value) const
-{
-    lint result = *this;
-    result %= value;
-
-    return result;
-}
-
 lint lint::operator-() const
 {
     lint result = *this;
@@ -515,10 +424,16 @@ std::pair<lint, lint> lint::quotient_and_remainder(lint const& value) const
         long_t k = a.find_divisor(b);
         result <<= 1;
         result += lint(k);
+
+        std::cout << b * k << " ";
+
         a -= b * k;
+
+        std::cout << a << std::endl;
         b >>= 1;
         shift--;
     }
+    std::cout << result << std::endl;
 
     if (shift + 1 > 0)
     {
@@ -660,14 +575,14 @@ long_t lint::find_divisor(lint const& value) const
 
     while (left + 1 != right)
     {
-        long_t m = (left + right) / 2;
-        if (*this < value * m)
+        long_t mid = (left + right) / 2;
+        if (*this < value * mid)
         {
-            right = m;
+            right = mid;
         }
         else
         {
-            left = m;
+            left = mid;
         }
     }
 
@@ -687,6 +602,84 @@ void lint::cut_zeroes()
     }
 }
 
+bool apa::operator<(lint const& first, lint const& second)
+{
+    return first.compare_to(second) < 0;
+}
+
+bool apa::operator>(lint const& first, lint const& second)
+{
+    return first.compare_to(second) > 0;
+}
+
+bool apa::operator<=(lint const& first, lint const& second)
+{
+    return first.compare_to(second) <= 0;
+}
+
+bool apa::operator>=(lint const& first, lint const& second)
+{
+    return first.compare_to(second) >= 0;
+}
+
+bool apa::operator==(lint const& first, lint const& second)
+{
+    return first.compare_to(second) == 0;
+}
+
+bool apa::operator!=(lint const& first, lint const& second)
+{
+    return first.compare_to(second) != 0;
+}
+
+lint apa::operator+(lint const& first, lint const& second)
+{
+    lint result = first;
+    result += second;
+
+    return result;
+}
+
+lint apa::operator-(lint const& first, lint const& second)
+{
+    lint result = first;
+    result -= second;
+
+    return result;
+}
+
+lint apa::operator*(lint const& first, lint const& second)
+{
+    lint result = first;
+    result *= second;
+
+    return result;
+}
+
+lint apa::operator*(lint const& first, long_t second)
+{
+    lint result = first;
+    result *= second;
+
+    return result;
+}
+
+lint apa::operator/(lint const& first, lint const& second)
+{
+    lint result = first;
+    result /= second;
+
+    return result;
+}
+
+lint apa::operator%(lint const& first, lint const& second)
+{
+    lint result = first;
+    result %= second;
+
+    return result;
+}
+
 lint apa::abs(lint const& value)
 {
     return value.abs();
@@ -695,59 +688,4 @@ lint apa::abs(lint const& value)
 lint apa::pow(lint const& value, long_t power)
 {
     return value.pow(power);
-}
-
-bool apa::operator<(int value, lint const& other)
-{
-    return other > value;
-}
-
-bool apa::operator>(int value, lint const& other)
-{
-    return other < value;
-}
-
-bool apa::operator<=(int value, lint const& other)
-{
-    return other >= value;
-}
-
-bool apa::operator>=(int value, lint const& other)
-{
-    return other <= value;
-}
-
-bool apa::operator==(int value, lint const& other)
-{
-    return other == value;
-}
-
-bool apa::operator!=(int value, lint const& other)
-{
-    return other != value;
-}
-
-lint apa::operator+(int value, lint const& other)
-{
-    return lint(value) + other;
-}
-
-lint apa::operator-(int value, lint const& other)
-{
-    return lint(value) - other;
-}
-
-lint apa::operator*(int value, lint const& other)
-{
-    return lint(value) * other;
-}
-
-lint apa::operator/(int value, lint const& other)
-{
-    return lint(value) / other;
-}
-
-lint apa::operator%(int value, lint const& other)
-{
-    return lint(value) % other;
 }

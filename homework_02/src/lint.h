@@ -20,30 +20,20 @@ namespace apa
         lint();
 
         lint(int);
-        explicit lint(double);
+        lint(double);
         explicit lint(long_t);
         explicit lint(std::string const&);
 
         std::string to_string() const;
 
-        lint(lint const&);
-        lint &operator=(lint const&);
-
 	    explicit operator int() const;
         explicit operator bool() const;
 
         lint abs() const;
-        lint operator+() const;
-        lint operator-() const;
-
         lint pow(long_t) const;
 
-        bool operator<(lint const&) const;
-        bool operator>(lint const&) const;
-        bool operator<=(lint const&) const;
-        bool operator>=(lint const&) const;
-        bool operator==(lint const&) const;
-        bool operator!=(lint const&) const;
+        lint operator+() const;
+        lint operator-() const;
 
         lint& operator+=(lint const&);
         lint& operator-=(lint const&);
@@ -52,12 +42,7 @@ namespace apa
         lint& operator/=(lint const&);
         lint& operator%=(lint const&);
 
-        lint operator+(lint const&) const;
-        lint operator-(lint const&) const;
-        lint operator*(long_t) const;
-        lint operator*(lint const&) const;
-        lint operator/(lint const&) const;
-        lint operator%(lint const&) const;
+        int compare_to(lint const&) const;
 
         lint& operator++();
         lint operator++(int);
@@ -76,8 +61,6 @@ namespace apa
         static const long_t BASE = 1000000000;
         static const size_t BASE_LENGTH = 9;
 
-        int compare_to(lint const&) const;
-
         void normalize();
         void cut_zeroes();
 
@@ -94,16 +77,17 @@ namespace apa
     lint abs(lint const&);
     lint pow(lint const&, long_t);
 
-    bool operator<(int, lint const&);
-    bool operator>(int, lint const&);
-    bool operator<=(int, lint const&);
-    bool operator>=(int, lint const&);
-    bool operator==(int, lint const&);
-    bool operator!=(int, lint const&);
+    bool operator<(lint const&, lint const&);
+    bool operator>(lint const&, lint const&);
+    bool operator<=(lint const&, lint const&);
+    bool operator>=(lint const&, lint const&);
+    bool operator==(lint const&, lint const&);
+    bool operator!=(lint const&, lint const&);
 
-    lint operator+(int, lint const&);
-    lint operator-(int, lint const&);
-    lint operator*(int, lint const&);
-    lint operator/(int, lint const&);
-    lint operator%(int, lint const&);
+    lint operator+(lint const&, lint const&);
+    lint operator-(lint const&, lint const&);
+    lint operator*(lint const&, long_t);
+    lint operator*(lint const&, lint const&);
+    lint operator/(lint const&, lint const&);
+    lint operator%(lint const&, lint const&);
 } // arbitrary-precision arithmetic
