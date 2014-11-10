@@ -11,7 +11,7 @@ namespace apa
     {
     public:
         vector_t();
-        vector_t(long_t);
+        explicit vector_t(long_t);
 
         ~vector_t();
 

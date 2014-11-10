@@ -45,6 +45,14 @@ lint::lint(std::string const& str)
     : shift_(0)
     , is_negative_(false)
 {
+    if (str == "")
+    {
+        digits_.clear();
+        digits_.push_back(0);
+
+        return;
+    }
+
     int begin = 0;
 
     is_negative_ = (str[0] == '-');
@@ -136,36 +144,6 @@ lint::operator bool() const
 lint lint::abs() const
 {
     return (is_negative_ ? -*this : *this);
-}
-
-
-lint lint::pow(long_t power) const
-{
-    if (power < 0)
-    {
-        return lint(0);
-    }
-    else if (power == 1)
-    {
-        return lint(1);
-    }
-
-    lint result = 1;
-    lint temp = *this;
-
-    while (power)
-    {
-        if (power & 1)
-        {
-            result *= temp;
-        }
-
-        temp *= temp;
-        power >>= 1;
-    }
-
-
-    return result;
 }
 
 int lint::compare_to(lint const& value) const
@@ -370,46 +348,13 @@ lint lint::operator-() const
     return result;
 }
 
-lint lint::operator+() const
-{
-    return *this;
-}
-
-lint& lint::operator++()
-{
-    *this += 1;
-
-    return *this;
-}
-
-lint lint::operator++(int)
-{
-    lint result = *this;
-    *this += 1;
-
-    return result;
-}
-
-lint& lint::operator--()
-{
-    *this -= 1;
-
-    return *this;
-}
-
-lint lint::operator--(int)
-{
-    lint result = *this;
-    *this -= 1;
-
-    return result;
-}
-
 std::pair<lint, lint> lint::quotient_and_remainder(lint const& value) const
 {
     if (!value)
     {
-        throw std::overflow_error("Division by zero exception");
+        int numerator = 1;
+        int denominator = 0;
+        numerator /= denominator;
     }
 
     lint a = abs();
@@ -435,12 +380,6 @@ std::pair<lint, lint> lint::quotient_and_remainder(lint const& value) const
         result <<= shift + 1;
     }
     result.cut_zeroes();
-
-    if (*this < 0)
-    {
-        result += 1;
-        a = value.abs() - a;
-    }
 
     result.is_negative_ = (result != lint(0)) && (is_negative_ != value.is_negative_);
 
@@ -469,50 +408,6 @@ lint lint::operator<<(int shift) const
 lint lint::operator>>(int shift) const
 {
     return lint(*this) >>= shift;
-}
-
-namespace apa
-{
-    std::istream& operator>>(std::istream &is, lint &value)
-    {
-        while (std::isspace(is.peek()))
-        {
-            is.get();
-        }
-
-        std::ostringstream ss;
-
-        if (is.peek() == '-' || is.peek() == '+')
-        {
-            char sign;
-            is.get(sign);
-            ss << sign;
-        }
-
-        if (!isdigit(is.peek()))
-        {
-            is.setstate(std::ios_base::badbit);
-            return is;
-        }
-
-        while (isdigit(is.peek()))
-        {
-            char temp;
-            is.get(temp);
-            ss << temp;
-        }
-
-        value = lint(ss.str());
-
-        return is;
-    }
-
-    std::ostream& operator<<(std::ostream &os, lint const &value)
-    {
-        os << value.to_string();
-
-        return os;
-    }
 }
 
 void lint::normalize()
@@ -602,90 +497,192 @@ void lint::cut_zeroes()
     }
 }
 
-bool apa::operator<(lint const& first, lint const& second)
+namespace apa
 {
-    return first.compare_to(second) < 0;
-}
+    std::istream &operator>>(std::istream &is, lint &value)
+    {
+        while (std::isspace(is.peek()))
+        {
+            is.get();
+        }
 
-bool apa::operator>(lint const& first, lint const& second)
-{
-    return first.compare_to(second) > 0;
-}
+        std::ostringstream ss;
 
-bool apa::operator<=(lint const& first, lint const& second)
-{
-    return first.compare_to(second) <= 0;
-}
+        if (is.peek() == '-' || is.peek() == '+')
+        {
+            char sign;
+            is.get(sign);
+            ss << sign;
+        }
 
-bool apa::operator>=(lint const& first, lint const& second)
-{
-    return first.compare_to(second) >= 0;
-}
+        if (!isdigit(is.peek()))
+        {
+            is.setstate(std::ios_base::badbit);
+            return is;
+        }
 
-bool apa::operator==(lint const& first, lint const& second)
-{
-    return first.compare_to(second) == 0;
-}
+        while (isdigit(is.peek()))
+        {
+            char temp;
+            is.get(temp);
+            ss << temp;
+        }
 
-bool apa::operator!=(lint const& first, lint const& second)
-{
-    return first.compare_to(second) != 0;
-}
+        value = lint(ss.str());
 
-lint apa::operator+(lint const& first, lint const& second)
-{
-    lint result = first;
-    result += second;
+        return is;
+    }
 
-    return result;
-}
+    std::ostream &operator<<(std::ostream &os, lint const &value)
+    {
+        os << value.to_string();
 
-lint apa::operator-(lint const& first, lint const& second)
-{
-    lint result = first;
-    result -= second;
+        return os;
+    }
 
-    return result;
-}
+    lint operator+(lint const &value)
+    {
+        return value;
+    }
 
-lint apa::operator*(lint const& first, lint const& second)
-{
-    lint result = first;
-    result *= second;
+    lint &operator++(lint &value)
+    {
+        value += 1;
 
-    return result;
-}
+        return value;
+    }
 
-lint apa::operator*(lint const& first, long_t second)
-{
-    lint result = first;
-    result *= second;
+    lint operator++(lint &value, int)
+    {
+        lint result = value;
+        value += 1;
 
-    return result;
-}
+        return result;
+    }
 
-lint apa::operator/(lint const& first, lint const& second)
-{
-    lint result = first;
-    result /= second;
+    lint &operator--(lint &value)
+    {
+        value -= 1;
 
-    return result;
-}
+        return value;
+    }
 
-lint apa::operator%(lint const& first, lint const& second)
-{
-    lint result = first;
-    result %= second;
+    lint operator--(lint &value, int)
+    {
+        lint result = value;
+        value -= 1;
 
-    return result;
-}
+        return result;
+    }
 
-lint apa::abs(lint const& value)
-{
-    return value.abs();
-}
+    bool operator<(lint const &first, lint const &second)
+    {
+        return first.compare_to(second) < 0;
+    }
 
-lint apa::pow(lint const& value, long_t power)
-{
-    return value.pow(power);
+    bool operator>(lint const &first, lint const &second)
+    {
+        return first.compare_to(second) > 0;
+    }
+
+    bool operator<=(lint const &first, lint const &second)
+    {
+        return first.compare_to(second) <= 0;
+    }
+
+    bool operator>=(lint const &first, lint const &second)
+    {
+        return first.compare_to(second) >= 0;
+    }
+
+    bool operator==(lint const &first, lint const &second)
+    {
+        return first.compare_to(second) == 0;
+    }
+
+    bool operator!=(lint const &first, lint const &second)
+    {
+        return first.compare_to(second) != 0;
+    }
+
+    lint operator+(lint const &first, lint const &second)
+    {
+        lint result = first;
+        result += second;
+
+        return result;
+    }
+
+    lint operator-(lint const &first, lint const &second)
+    {
+        lint result = first;
+        result -= second;
+
+        return result;
+    }
+
+    lint operator*(lint const &first, lint const &second)
+    {
+        lint result = first;
+        result *= second;
+
+        return result;
+    }
+
+    lint operator*(lint const &first, long_t second)
+    {
+        lint result = first;
+        result *= second;
+
+        return result;
+    }
+
+    lint operator/(lint const &first, lint const &second)
+    {
+        lint result = first;
+        result /= second;
+
+        return result;
+    }
+
+    lint operator%(lint const &first, lint const &second)
+    {
+        lint result = first;
+        result %= second;
+
+        return result;
+    }
+
+    lint abs(lint const &value)
+    {
+        return value.abs();
+    }
+
+    lint pow(lint const &value, long_t power)
+    {
+        if (power < 0)
+        {
+            return lint(0);
+        }
+        else if (power == 1)
+        {
+            return lint(1);
+        }
+
+        lint result = 1;
+        lint temp = value;
+
+        while (power)
+        {
+            if (power & 1)
+            {
+                result *= temp;
+            }
+
+            temp *= temp;
+            power >>= 1;
+        }
+
+        return result;
+    }
 }

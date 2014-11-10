@@ -30,9 +30,7 @@ namespace apa
         explicit operator bool() const;
 
         lint abs() const;
-        lint pow(long_t) const;
 
-        lint operator+() const;
         lint operator-() const;
 
         lint& operator+=(lint const&);
@@ -43,15 +41,6 @@ namespace apa
         lint& operator%=(lint const&);
 
         int compare_to(lint const&) const;
-
-        lint& operator++();
-        lint operator++(int);
-
-        lint& operator--();
-        lint operator--(int);
-
-        friend std::istream& operator>>(std::istream &, lint&);
-        friend std::ostream& operator<<(std::ostream &, lint const&);
 
     private:
         vector_t digits_;
@@ -74,8 +63,19 @@ namespace apa
         lint operator>>(int) const;
     };
 
+    std::istream& operator>>(std::istream &, lint&);
+    std::ostream& operator<<(std::ostream &, lint const&);
+
     lint abs(lint const&);
     lint pow(lint const&, long_t);
+
+    lint operator+(lint const&);
+
+    lint& operator++(lint const&);
+    lint operator++(lint const&, int);
+
+    lint& operator--(lint const&);
+    lint operator--(lint const&, int);
 
     bool operator<(lint const&, lint const&);
     bool operator>(lint const&, lint const&);
