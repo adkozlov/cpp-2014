@@ -22,7 +22,7 @@ lint::lint(double value)
     {
         while (value >= 1)
         {
-            digits_.push_back(remainder(value, BASE));
+            digits_.push_back(static_cast<long_t>(remainder(value, BASE)));
             value /= BASE;
         }
     }
@@ -53,7 +53,7 @@ lint::lint(std::string const& str)
         return;
     }
 
-    int begin = 0;
+    size_t begin = 0;
 
     is_negative_ = (str[0] == '-');
     if (str[0] == '-' || str[0] == '+')
@@ -66,7 +66,7 @@ lint::lint(std::string const& str)
 
     digits_.clear();
 
-    for (int i = str.length() - 1; i >= begin; i--)
+    for (size_t i = str.length(); i >= begin + 1; i--)
     {
         if (counter == lint::BASE_LENGTH)
         {
@@ -75,8 +75,8 @@ lint::lint(std::string const& str)
             counter = 0;
         }
 
-        long_t d = (str[i] - '0');
-        for (size_t i = 0; i < counter; i++)
+        long_t d = (str[i - 1] - '0');
+        for (size_t j = 0; j < counter; j++)
         {
             d *= 10;
         }
@@ -97,17 +97,16 @@ std::string lint::to_string() const
         sstream << "-";
     }
 
-    int size = digits_.size();
-    for (int i = size - 1; i >= 0; i--)
+    for (size_t i = digits_.size(); i >= 1; i--)
     {
         std::ostringstream out;
-        out << digits_[i];
+        out << digits_[i - 1];
         std::string str = out.str();
 
-        if (i != size - 1)
+        if (i != digits_.size())
         {
-            int count = lint::BASE_LENGTH - str.length();
-            for (int i = 0; i < count; i++)
+            int count = (int) (lint::BASE_LENGTH - str.length());
+            for (int j = 0; j < count; j++)
             {
                 sstream << "0";
             }
@@ -133,7 +132,7 @@ lint::operator int() const
         result += digits_[1] * BASE;
     }
 
-    return is_negative_ ? -result : result;
+    return (int) (is_negative_ ? -result : result);
 }
 
 lint::operator bool() const
@@ -173,16 +172,16 @@ int lint::compare_to(lint const& value) const
         }
     }
 
-    for (int i = digits_.size() - 1; i >= 0; i--)
+    for (size_t i = digits_.size(); i >= 1; i--)
     {
-        int j = i - value.shift_ + shift_;
+        int j = (int) (i - 1 - value.shift_ + shift_);
         long_t d = (0 <= j && j < (int) value.digits_.size()) ? value.digits_[j] : 0;
         
-        if (digits_[i] < d)
+        if (digits_[i - 1] < d)
         {
             return -1;
         }
-        if (digits_[i] > d)
+        if (digits_[i - 1] > d)
         {
             return 1;
         }
@@ -222,7 +221,7 @@ lint& lint::operator+=(lint const& value)
 
     if (shift_ > value.shift_)
     {
-        digits_.insert(0, shift_ - value.shift_, 0);
+        digits_.insert(0, (size_t) (shift_ - value.shift_), 0);
         shift_ = value.shift_;
     }
 
@@ -268,7 +267,7 @@ lint& lint::operator-=(lint const& value)
 
     if (shift_ > value.shift_)
     {
-        digits_.insert(0, shift_ - value.shift_, 0);
+        digits_.insert(0, (size_t) (shift_ - value.shift_), 0);
         shift_ = value.shift_;
     }
 
@@ -314,10 +313,10 @@ lint& lint::operator*=(lint const& value)
 
     lint temp;
 
-    for (int i = value.digits_.size() - 1; i >= 0; i--)
+    for (size_t i = value.digits_.size(); i >= 1; i--)
     {
         temp *= BASE;
-        temp += (*this) * value.digits_[i];
+        temp += (*this) * value.digits_[i - 1];
     }
 
     temp.is_negative_ = (temp != lint(0)) && (is_negative_ != value.is_negative_);
@@ -361,7 +360,7 @@ std::pair<lint, lint> lint::quotient_and_remainder(lint const& value) const
     lint b = value.abs();
     lint result;
 
-    int shift = a.digits_.size() - b.digits_.size();
+    int shift = (int) (a.digits_.size() - b.digits_.size());
     b <<= shift;
 
     while (a >= value.abs())
@@ -382,6 +381,7 @@ std::pair<lint, lint> lint::quotient_and_remainder(lint const& value) const
     result.cut_zeroes();
 
     result.is_negative_ = (result != lint(0)) && (is_negative_ != value.is_negative_);
+    a.is_negative_ = (a != lint(0)) && is_negative_;
 
     return std::make_pair(result, a);
 }
@@ -545,7 +545,7 @@ namespace apa
         return value;
     }
 
-    lint &operator++(lint &value)
+    lint& operator++(lint &value)
     {
         value += 1;
 
@@ -560,7 +560,7 @@ namespace apa
         return result;
     }
 
-    lint &operator--(lint &value)
+    lint& operator--(lint &value)
     {
         value -= 1;
 

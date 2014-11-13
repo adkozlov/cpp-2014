@@ -71,11 +71,11 @@ namespace apa
 
     lint operator+(lint const&);
 
-    lint& operator++(lint const&);
-    lint operator++(lint const&, int);
+    lint& operator++(lint&);
+    lint operator++(lint&, int);
 
-    lint& operator--(lint const&);
-    lint operator--(lint const&, int);
+    lint& operator--(lint&);
+    lint operator--(lint&, int);
 
     bool operator<(lint const&, lint const&);
     bool operator>(lint const&, lint const&);

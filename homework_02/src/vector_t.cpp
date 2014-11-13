@@ -117,9 +117,9 @@ void vector_t::insert(size_t position, size_t count, long_t digit)
     size_t temp = size_;
     resize(size_ + count, 0);
     
-    for (int i = temp - 1; i >= (int) position; i--)
+    for (size_t i = temp; i >= position + 1; i--)
     {
-        (*this)[i + count] = (*this)[i];
+        (*this)[i + count - 1] = (*this)[i - 1];
     }
     for (size_t i = position; i < count; i++)
     {
