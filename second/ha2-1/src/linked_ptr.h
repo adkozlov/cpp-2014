@@ -8,7 +8,7 @@ namespace smart_ptr
     {
         class node_t
         {
-        protected:
+        public:
             node_t()
                 : next_(nullptr)
                 , previous_(nullptr)
@@ -43,67 +43,40 @@ namespace smart_ptr
 
             void swap(node_t& node)
             {
-                if (this == &node)
-                {
-                    return;
-                }
+                bool swap_left = previous_ == &node;
+                bool swap_right = next_ == &node;
 
-                if (previous_ == &node)
+                std::swap(previous_, node.previous_);
+                std::swap(next_, node.next_);
+
+                if (swap_left)
                 {
-                    const node_t* next = next_;
                     next_ = &node;
-                    previous_ = node.previous_;
-                    if (node.previous_ != nullptr)
-                    {
-                        node.previous_->next_ = this;
-                    }
-                    node.next_ = next;
                     node.previous_ = this;
-                    if (next != nullptr)
-                    {
-                        next->previous_ = &node;
-                    }
-                }
-                else if (next_ == &node)
-                {
-                    const node_t* previous = previous_;
-                    previous_ = &node;
-                    next_ = node.next_;
-                    if (node.next_ != nullptr)
-                    {
-                        node.next_->previous_ = this;
-                    }
-                    node.previous_ = previous;
-                    node.next_ = this;
-                    if (previous != nullptr)
-                    {
-                        previous->next_ = &node;
-                    }
                 }
                 else
+                if (swap_right)
                 {
-                    const node_t* next = next_;
-                    const node_t* previous = previous_;
-                    next_ = node.next_;
-                    previous_ = node.previous_;
-                    if (node.next_ != nullptr)
-                    {
-                        node.next_->previous_ = this;
-                    }
-                    if (node.previous_ != nullptr)
-                    {
-                        node.previous_->next_ = this;
-                    }
-                    node.next_ = next;
-                    node.previous_ = previous;
-                    if (next != nullptr)
-                    {
-                        next->previous_ = &node;
-                    }
-                    if (previous != nullptr)
-                    {
-                        previous->next_ = &node;
-                    }
+                    previous_ = &node;
+                    node.next_ = this;
+                }
+
+                if (previous_ != nullptr)
+                {
+                    previous_->next_ = this;
+                }
+                if (next_ != nullptr)
+                {
+                    next_->previous_ = this;
+                }
+
+                if (node.previous_ != nullptr)
+                {
+                    node.previous_->next_ = &node;
+                }
+                if (node.next_ != nullptr)
+                {
+                    node.next_->previous_ = &node;
                 }
             }
 
@@ -119,7 +92,7 @@ namespace smart_ptr
     } // linked list node
 
     template <typename T>
-    class linked_ptr : public details::node_t
+    class linked_ptr
     {
     public:
         explicit linked_ptr();
@@ -152,19 +125,14 @@ namespace smart_ptr
         template <typename U>
         bool operator==(linked_ptr<U> const&) const;
         template <typename U>
-        bool operator!=(linked_ptr<U> const&) const;
-        template <typename U>
         bool operator<(linked_ptr<U> const&) const;
-        template <typename U>
-        bool operator<=(linked_ptr<U> const&) const;
-        template <typename U>
-        bool operator>(linked_ptr<U> const&) const;
-        template <typename U>
-        bool operator>=(linked_ptr<U> const&) const;
 
         explicit operator bool() const;
 
+        details::node_t& node() const;
+
     private:
+        mutable details::node_t node_;
         T* resource_;
     };
 
@@ -201,7 +169,7 @@ namespace smart_ptr
 
     template <typename T>
     linked_ptr<T>::linked_ptr(linked_ptr<T> const& pointer)
-        : node_t(pointer)
+        : node_(pointer.node_)
         , resource_(pointer.get())
     {
     }
@@ -209,7 +177,7 @@ namespace smart_ptr
     template <typename T>
     template <typename U>
     linked_ptr<T>::linked_ptr(linked_ptr<U> const& pointer)
-        : node_t(pointer)
+        : node_(pointer.node())
         , resource_(pointer.get())
     {
     }
@@ -266,13 +234,13 @@ namespace smart_ptr
         {
             std::swap(resource_, pointer.resource_);
         }
-        this->node_t::swap(static_cast<node_t&>(pointer));
+        node_.swap(pointer.node_);
     }
 
     template <typename T>
     bool linked_ptr<T>::unique() const
     {
-        return get() ? this->node_t::unique() : false;
+        return get() ? node_.unique() : false;
     }
 
     template <typename T>
@@ -296,43 +264,45 @@ namespace smart_ptr
 
     template <typename T>
     template <typename U>
-    bool linked_ptr<T>::operator!=(linked_ptr<U> const& pointer) const
-    {
-        return !(*this == pointer);
-    }
-
-    template <typename T>
-    template <typename U>
     bool linked_ptr<T>::operator<(linked_ptr<U> const& pointer) const
     {
         return get() < pointer.get();
     }
 
     template <typename T>
-    template <typename U>
-    bool linked_ptr<T>::operator<=(linked_ptr<U> const& pointer) const
-    {
-        return !(*this > pointer);
-    }
-
-    template <typename T>
-    template <typename U>
-    bool linked_ptr<T>::operator>(linked_ptr<U> const& pointer) const
-    {
-        return pointer < *this;
-    }
-
-    template <typename T>
-    template <typename U>
-    bool linked_ptr<T>::operator>=(linked_ptr<U> const& pointer) const
-    {
-        return !(*this < pointer);
-    }
-
-    template <typename T>
     linked_ptr<T>::operator bool() const
     {
         return get() != nullptr;
+    }
+
+    template <typename T>
+    details::node_t& linked_ptr<T>::node() const
+    {
+        return node_;
+    }
+
+    template <typename T, typename U>
+    bool operator!=(linked_ptr<T> const& lhs, linked_ptr<U> const& rhs)
+    {
+        return !(lhs == rhs);
+    }
+
+    template <typename T, typename U>
+    bool operator<=(linked_ptr<T> const& lhs, linked_ptr<U> const& rhs)
+    {
+        return !(lhs > rhs);
+    }
+
+    template <typename T, typename U>
+    bool operator>(linked_ptr<T> const& lhs, linked_ptr<U> const& rhs)
+    {
+        return rhs < lhs;
+    }
+
+    template <typename T, typename U>
+    bool operator>=(linked_ptr<T> const& lhs, linked_ptr<U> const& rhs)
+    {
+        return !(lhs < rhs);
     }
 } // smart pointers
 
