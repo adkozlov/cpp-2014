@@ -74,6 +74,57 @@ namespace std_utils
             shared_ptr<T> buffer_;
             size_t size_;
         };
+
+        template <typename S>
+        class proxy
+        {
+        public:
+            typedef typename S::value_type T;
+            typedef typename S::traits_type Traits;
+
+            proxy(S& ptr, size_t position)
+                : ptr_(&ptr)
+                , position_(position)
+            {
+            }
+
+            T& operator=(T const& new_symbol)
+            {
+                if (ptr_->buffer_.unique())
+                {
+                    symbol() = new_symbol;
+                }
+                else
+                {
+                    size_t size = ptr_->size();
+                    auto ptr = S::allocate_buffer_if_needed(size);
+                    Traits::copy(ptr.get(), buffer(), size);
+                    Traits::assign(ptr.get()[position_], new_symbol);
+                    ptr_->buffer_ = S::share_allocated_buffer(size, ptr);
+                }
+
+                return symbol();
+            }
+
+            operator T()
+            {
+                return symbol();
+            }
+
+        private:
+            S* ptr_;
+            size_t position_;
+
+            T* buffer()
+            {
+                return ptr_->buffer_->buffer().get();
+            }
+
+            T& symbol()
+            {
+                return buffer()[position_];
+            }
+        };
     } // lazy string utils
 
     template <typename T, typename Traits = std::char_traits<T>>
@@ -104,7 +155,7 @@ namespace std_utils
         lazy_basic_string<T, Traits>& operator+=(lazy_basic_string<T, Traits> const&);
 
         T const& operator[](size_t) const;
-        T& operator[](size_t); // TODO not const version
+        details::proxy<lazy_basic_string<T, Traits>> operator[](size_t);
 
         bool operator==(lazy_basic_string<T, Traits> const&) const;
         bool operator< (lazy_basic_string<T, Traits> const&) const;
@@ -121,6 +172,8 @@ namespace std_utils
         static shared_ptr<T> allocate_buffer_if_needed(size_t size=0, T* ptr=nullptr);
         static shared_ptr<details::buffer_t<T>> share_allocated_buffer(size_t size=0, shared_ptr<T> ptr=nullptr);
         static shared_ptr<details::buffer_t<T>> init(size_t size=0, T const& symbol=T());
+
+        friend class details::proxy<lazy_basic_string>;
     };
 
     typedef lazy_basic_string<char> lazy_string;
@@ -286,9 +339,10 @@ namespace std_utils
     }
 
     template <typename T, typename Traits>
-    T& lazy_basic_string<T, Traits>::operator[](size_t position)
+    details::proxy<lazy_basic_string<T, Traits>> lazy_basic_string<T, Traits>::operator[](size_t position)
     {
-        return (*buffer_)[position];
+        details::proxy<lazy_basic_string<T, Traits>> proxy(*this, position);
+        return proxy;
     }
 
     template <typename T, typename Traits>
