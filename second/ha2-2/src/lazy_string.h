@@ -102,8 +102,6 @@ namespace std_utils
         lazy_basic_string<T, Traits>& operator=(lazy_basic_string<T, Traits>&&);
 
         lazy_basic_string<T, Traits>& operator+=(lazy_basic_string<T, Traits> const&);
-        lazy_basic_string<T, Traits>& operator+=(T const*);
-        lazy_basic_string<T, Traits>& operator+=(T const&);
 
         T const& operator[](size_t) const;
         T& operator[](size_t); // TODO not const version
@@ -236,17 +234,17 @@ namespace std_utils
     }
 
     template <typename T, typename Traits>
-    lazy_basic_string<T, Traits>& lazy_basic_string<T, Traits>::operator+=(T const* other)
+    lazy_basic_string<T, Traits>& operator+=(lazy_basic_string<T, Traits>& lhs, T const* rhs)
     {
-        *this += lazy_basic_string(other);
-        return *this;
+        lhs += lazy_basic_string<T, Traits>(rhs);
+        return lhs;
     }
 
     template <typename T, typename Traits>
-    lazy_basic_string<T, Traits>& lazy_basic_string<T, Traits>::operator+=(T const& symbol)
+    lazy_basic_string<T, Traits>& operator+=(lazy_basic_string<T, Traits>& lhs, T const& rhs)
     {
-        *this += lazy_basic_string(1, symbol);
-        return *this;
+        lhs += lazy_basic_string<T, Traits>(1, rhs);
+        return lhs;
     }
 
     template <typename T, typename Traits>
@@ -258,9 +256,21 @@ namespace std_utils
     }
 
     template <typename T, typename Traits>
+    lazy_basic_string<T, Traits> operator+(lazy_basic_string<T, Traits> const& lhs, T const* rhs)
+    {
+        return lhs + lazy_basic_string<T, Traits>(rhs);
+    }
+
+    template <typename T, typename Traits>
     lazy_basic_string<T, Traits> operator+(T const* lhs, lazy_basic_string<T, Traits> const& rhs)
     {
         return lazy_basic_string<T, Traits>(lhs) + rhs;
+    }
+
+    template <typename T, typename Traits>
+    lazy_basic_string<T, Traits> operator+(lazy_basic_string<T, Traits> const& lhs, T const& rhs)
+    {
+        return lhs + lazy_basic_string<T, Traits>(1, rhs);
     }
 
     template <typename T, typename Traits>
@@ -326,9 +336,21 @@ namespace std_utils
     }
 
     template <typename T, typename Traits>
+    bool operator==(lazy_basic_string<T, Traits> const& lhs, T const* rhs)
+    {
+        return lhs == lazy_basic_string<T, Traits>(rhs);
+    }
+
+    template <typename T, typename Traits>
     bool operator==(T const* lhs, lazy_basic_string<T, Traits> const& rhs)
     {
         return rhs == lhs;
+    }
+
+    template <typename T, typename Traits>
+    bool operator!=(lazy_basic_string<T, Traits> const& lhs, T const* rhs)
+    {
+        return lhs != lazy_basic_string<T, Traits>(rhs);
     }
 
     template <typename T, typename Traits>
@@ -338,9 +360,21 @@ namespace std_utils
     }
 
     template <typename T, typename Traits>
+    bool operator< (lazy_basic_string<T, Traits> const& lhs, T const* rhs)
+    {
+        return lhs < lazy_basic_string<T, Traits>(rhs);
+    }
+
+    template <typename T, typename Traits>
     bool operator< (T const* lhs, lazy_basic_string<T, Traits> const& rhs)
     {
         return rhs > lhs;
+    }
+
+    template <typename T, typename Traits>
+    bool operator<=(lazy_basic_string<T, Traits> const& lhs, T const* rhs)
+    {
+        return lhs <= lazy_basic_string<T, Traits>(rhs);
     }
 
     template <typename T, typename Traits>
@@ -350,9 +384,21 @@ namespace std_utils
     }
 
     template <typename T, typename Traits>
+    bool operator> (lazy_basic_string<T, Traits> const& lhs, T const* rhs)
+    {
+        return lhs > lazy_basic_string<T, Traits>(rhs);
+    }
+
+    template <typename T, typename Traits>
     bool operator> (T const* lhs, lazy_basic_string<T, Traits> const& rhs)
     {
         return rhs < lhs;
+    }
+
+    template <typename T, typename Traits>
+    bool operator>=(lazy_basic_string<T, Traits> const& lhs, T const* rhs)
+    {
+        return lhs >= lazy_basic_string<T, Traits>(rhs);
     }
 
     template <typename T, typename Traits>
