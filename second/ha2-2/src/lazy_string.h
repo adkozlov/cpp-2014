@@ -39,13 +39,42 @@ namespace std_utils
             }
         };
 
-        template <typename T>
+        template <typename T, typename Traits>
         class buffer_t
         {
         public:
-            buffer_t(size_t size)
+            buffer_t(size_t size=0)
                 : buffer_(new T[size + 1])
                 , size_(size + 1)
+            {
+                Traits::assign(buffer_[size_], T());
+            }
+
+            buffer_t(T const* other)
+                : buffer_t(Traits::length(other))
+            {
+                Traits::copy(buffer_, other, size_);
+            }
+
+            buffer_t(T const* first, T const* second)
+                : buffer_t(Traits::length(first) + Traits::length(second))
+            {
+                size_t first_size = Traits::length(first);
+                Traits::copy(buffer_, first, first_size);
+                Traits::copy(buffer_ + first_size * sizeof(T), second, Traits::length(second));
+            }
+
+            buffer_t(size_t size, T const& symbol)
+                : buffer_t(size)
+            {
+                for (size_t i = 0; i < size; ++i)
+                {
+                    replace(i, symbol);
+                }
+            }
+
+            buffer_t(buffer_t const& other)
+                : buffer_t(other.buffer_)
             {
             }
 
@@ -66,41 +95,18 @@ namespace std_utils
 
             size_t size() const
             {
-                return size_;
+                return size_ - 1;
+            }
+
+            void replace(size_t position, T const& symbol)
+            {
+                Traits::assign(buffer_[position], symbol);
             }
 
         private:
             T* buffer_;
             size_t size_;
         };
-
-        template <typename T, typename Traits>
-        buffer_t<T>* copy(size_t size, T const* buffer)
-        {
-            buffer_t<T>* new_buffer = new buffer_t<T>(size);
-            T* raw_buffer = &(*new_buffer)[0];
-            Traits::copy(raw_buffer, buffer, size + 1);
-            return new_buffer;
-        }
-
-        template <typename T>
-        shared_ptr<buffer_t<T>> share_allocated_buffer(buffer_t<T>* buffer)
-        {
-            return shared_ptr<buffer_t<T>>(buffer, [](buffer_t<T>* b){ delete b; });
-        }
-
-        template <typename T, typename Traits>
-        shared_ptr<buffer_t<T>> share_allocated_buffer_by_symbol(size_t size=0, T const& symbol=T())
-        {
-            buffer_t<T>* buffer = new buffer_t<T>(size);
-            T* raw_buffer = &(*buffer)[0];
-            for (size_t i = 0; i < size; ++i)
-            {
-                Traits::assign(raw_buffer[i], symbol);
-            }
-            Traits::assign(raw_buffer[size], T());
-            return share_allocated_buffer<T>(buffer);
-        }
 
         template <typename String>
         class proxy
@@ -115,19 +121,9 @@ namespace std_utils
             {
             }
 
-            T& operator=(T const& new_symbol)
+            T& operator=(T const& symbol)
             {
-                if (string_->buffer_.unique())
-                {
-                    proxied() = new_symbol;
-                }
-                else
-                {
-                    buffer_t<T>* new_buffer = copy<T, Traits>(string_->size(), string_->c_str());
-                    Traits::assign((&(*new_buffer)[0])[position_], new_symbol);
-                    string_->buffer_ = share_allocated_buffer<T>(new_buffer);
-                }
-
+                string_->replace(position_, symbol);
                 return proxied();
             }
 
@@ -168,15 +164,13 @@ namespace std_utils
         lazy_basic_string(size_t, T const&);
         lazy_basic_string(T const*);
 
-        ~lazy_basic_string();
-
-        lazy_basic_string<T, Traits>& operator=(lazy_basic_string<T, Traits> const&);
-        lazy_basic_string<T, Traits>& operator=(lazy_basic_string<T, Traits>&&);
+        lazy_basic_string<T, Traits>& operator=(lazy_basic_string<T, Traits>);
 
         lazy_basic_string<T, Traits>& operator+=(lazy_basic_string<T, Traits> const&);
 
         T const& operator[](size_t) const;
         details::proxy<lazy_basic_string<T, Traits>> operator[](size_t);
+        lazy_basic_string<T, Traits>& replace(size_t, T const&);
 
         bool operator==(lazy_basic_string<T, Traits> const&) const;
         bool operator!=(lazy_basic_string<T, Traits> const&) const;
@@ -192,10 +186,9 @@ namespace std_utils
         T const* c_str() const;
 
     private:
-        typedef details::buffer_t<T> TBuffer;
-        shared_ptr<TBuffer> buffer_;
+        typedef details::buffer_t<T, Traits> TBuffer;
 
-        friend class details::proxy<lazy_basic_string>;
+        shared_ptr<TBuffer> buffer_;
     };
 
     typedef lazy_basic_string<char> lazy_string;
@@ -229,58 +222,30 @@ namespace std_utils
 
     template <typename T, typename Traits>
     lazy_basic_string<T, Traits>::lazy_basic_string(size_t size, T const& symbol)
-        : buffer_(details::share_allocated_buffer_by_symbol<T, Traits>(size, symbol))
+        : buffer_(shared_ptr<TBuffer>(new TBuffer(size, symbol)))
     {
     }
 
     template <typename T, typename Traits>
     lazy_basic_string<T, Traits>::lazy_basic_string(T const* other)
-    {
-        TBuffer* buffer = details::copy<T, Traits>(Traits::length(other), other);
-        buffer_ = details::share_allocated_buffer<T>(buffer);
-    }
-
-    template <typename T, typename Traits>
-    lazy_basic_string<T, Traits>::~lazy_basic_string()
+        : buffer_(shared_ptr<TBuffer>(new TBuffer(other)))
     {
     }
 
     template <typename T, typename Traits>
-    lazy_basic_string<T, Traits>& lazy_basic_string<T, Traits>::operator=(lazy_basic_string<T, Traits> const& other)
+    lazy_basic_string<T, Traits>& lazy_basic_string<T, Traits>::operator=(lazy_basic_string<T, Traits> other)
     {
-        if (this == &other)
+        if (this != &other)
         {
-            return *this;
+            swap(other);
         }
-        lazy_basic_string<T, Traits> string;
-        swap(string);
-        buffer_ = shared_ptr<TBuffer>(other.buffer_);
-        return *this;
-    }
-
-    template <typename T, typename Traits>
-    lazy_basic_string<T, Traits>& lazy_basic_string<T, Traits>::operator=(lazy_basic_string<T, Traits>&& other)
-    {
-        lazy_basic_string<T, Traits> string;
-        swap(string);
-        buffer_ = other.buffer_;
-        other.clear();
         return *this;
     }
 
     template <typename T, typename Traits>
     lazy_basic_string<T, Traits>& lazy_basic_string<T, Traits>::operator+=(lazy_basic_string<T, Traits> const& other)
     {
-        size_t this_size = size();
-        size_t other_size = other.size();
-        size_t new_size = this_size + other_size;
-        TBuffer* buffer = new TBuffer(new_size);
-        T* raw_buffer = &(*buffer)[0];
-
-        Traits::copy(raw_buffer, c_str(), this_size);
-        Traits::copy(raw_buffer + this_size * sizeof(T), other.c_str(), other_size + 1);
-        buffer_ = details::share_allocated_buffer<T>(buffer);
-
+        buffer_ = shared_ptr<TBuffer>(new TBuffer(c_str(), other.c_str()));
         return *this;
     }
 
@@ -327,6 +292,22 @@ namespace std_utils
     {
         details::proxy<lazy_basic_string<T, Traits>> proxy(this, position);
         return proxy;
+    }
+
+    template <typename T, typename Traits>
+    lazy_basic_string<T, Traits>& lazy_basic_string<T, Traits>::replace(size_t position, T const& symbol)
+    {
+        if (buffer_.unique())
+        {
+            buffer_->replace(position, symbol);
+        }
+        else
+        {
+            TBuffer* buffer = new TBuffer(*buffer_);
+            buffer->replace(position, symbol);
+            buffer_ = shared_ptr<TBuffer>(buffer);
+        }
+        return *this;
     }
 
     template <typename T, typename Traits>
@@ -412,9 +393,7 @@ namespace std_utils
     template <typename T, typename Traits>
     void lazy_basic_string<T, Traits>::swap(lazy_basic_string<T, Traits>& other)
     {
-        shared_ptr<TBuffer> buffer(buffer_);
-        buffer_ = other.buffer_;
-        other.buffer_ = buffer;
+        std::swap(buffer_, other.buffer_);
     }
 
     template <typename T, typename Traits>
@@ -426,19 +405,19 @@ namespace std_utils
     template <typename T, typename Traits>
     void lazy_basic_string<T, Traits>::clear()
     {
-        buffer_ = details::share_allocated_buffer_by_symbol<T, Traits>();
+        buffer_ = shared_ptr<TBuffer>(new TBuffer());
     }
 
     template <typename T, typename Traits>
     size_t lazy_basic_string<T, Traits>::size() const
     {
-        return buffer_->size() - 1;
+        return buffer_->size();
     }
 
     template <typename T, typename Traits>
     bool lazy_basic_string<T, Traits>::empty() const
     {
-        return buffer_->size() == 1;
+        return buffer_->size() == 0;
     }
 
     template <typename T, typename Traits>
