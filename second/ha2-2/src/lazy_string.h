@@ -47,7 +47,7 @@ namespace std_utils
                 : buffer_(new T[size + 1])
                 , size_(size + 1)
             {
-                Traits::assign(buffer_[size_], T());
+                Traits::assign(buffer_[size], T());
             }
 
             buffer_t(T const* other)

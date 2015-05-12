@@ -40,13 +40,36 @@ bool str_equal(const STRING& str1, const STRING& str2)
     return true;
 }
 
+//void test_empty_string()
+//{
+//    lazy_string str_empty;
+//    assert(str_empty.empty());
+//    assert(str_empty.size() == 0);
+//    str_empty.clear();
+//    assert(str_empty.empty());
+//}
+//
+//void test_constructors()
+//{
+//    const char *c_str = "abcdefghijklmnop";
+//    lazy_string str1 = c_str;
+//    lazy_string str2 = str1;
+//    assert(str_equal<lazy_string>(c_str, str1));
+//    assert(str_equal<lazy_string>(str1, str2));
+//}
+
 void test_empty_string()
 {
     lazy_string str_empty;
     assert(str_empty.empty());
     assert(str_empty.size() == 0);
+    assert(str_empty == lazy_string());
+    str_empty = "not empty";
+    assert(str_empty != lazy_string());
     str_empty.clear();
     assert(str_empty.empty());
+    assert(str_empty.size() == 0);
+    assert(str_empty == lazy_string());
 }
 
 void test_constructors()
@@ -56,6 +79,9 @@ void test_constructors()
     lazy_string str2 = str1;
     assert(str_equal<lazy_string>(c_str, str1));
     assert(str_equal<lazy_string>(str1, str2));
+    const char *c_str_same = "qqqqqqqqqqq"; //11
+    lazy_string str_same(11, 'q');
+    assert(str_equal<lazy_string>(c_str_same, str_same));
 }
 
 void test_assignment_operator()
@@ -124,25 +150,15 @@ void test_lazy_wstring()
 
 int main() {
     test_internal_typedefs();
-//    std::cout << "typedefs ok!" << std::endl;
     test_empty_string();
-//    std::cout << "empty string ok!" << std::endl;
     test_constructors();
-//    std::cout << "constructors ok!" << std::endl;
     test_assignment_operator();
-//    std::cout << "assignment operator ok!" << std::endl;
     test_plus_operator();
-//    std::cout << "plus operator ok!" << std::endl;
     test_index_operator();
-//    std::cout << "index operator ok!" << std::endl;
     test_relational_operators();
-//    std::cout << "relation operator ok!" << std::endl;
     test_c_str();
-//    std::cout << "c_str ok!" << std::endl;
     test_swap();
-//    std::cout << "swap ok!" << std::endl;
     test_lazy_wstring();
-//    std::cout << "lazy wstring ok!" << std::endl;
 
     std::cout << "ok!" << std::endl;
     return 0;
