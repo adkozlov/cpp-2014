@@ -41,6 +41,9 @@ namespace fn
 
             BindT& operator=(BindT);
 
+            template <typename FirstArgument, typename... Arguments>
+            auto operator()(FirstArgument first_argument, Arguments... arguments) -> decltype(function_(first_argument, arguments...));
+
             template <typename FirstArgument, typename SecondArgument, typename... Arguments>
             auto operator()(FirstArgument first_argument, SecondArgument second_argument, Arguments... arguments) -> decltype(function_(second_argument, first_argument, arguments...));
 
@@ -64,10 +67,32 @@ namespace fn
 
             BindT& operator=(BindT);
 
+            template <typename FirstArgument, typename SecondArgument, typename... Arguments>
+            auto operator()(FirstArgument first_argument, SecondArgument second_argument, Arguments... arguments) -> decltype(function_(second_argument, first_argument, arguments...));
+
             template <typename FirstArgument, typename SecondArgument, typename ThirdArgument, typename... Arguments>
             auto operator()(FirstArgument first_argument, SecondArgument second_argument, ThirdArgument third_argument, Arguments... arguments) -> decltype(function_(third_argument, first_argument, second_argument, arguments...));
 
             void swap(BindT&);
+        };
+
+        template <typename Function>
+        class reverse_bind_t
+        {
+            typedef reverse_bind_t<Function> BindT;
+
+            Function function_;
+        public:
+            reverse_bind_t(Function const& function);
+            reverse_bind_t(BindT const&);
+            reverse_bind_t(BindT&&);
+
+            BindT& operator=(BindT);
+
+            template <typename FirstArgument, typename SecondArgument, typename... Arguments>
+            auto operator()(FirstArgument first_argument, SecondArgument second_argument, Arguments... arguments) -> decltype(function_(second_argument, first_argument, arguments...));
+
+            void swap(BindT& other);
         };
     } // details
 
@@ -75,10 +100,13 @@ namespace fn
     const static details::placeholder2 _2{};
 
     template <typename Function, typename Argument>
-    details::bind_t<Function, Argument> bind(Function const& function, Argument argument);
+    details::bind_t<Function, Argument> bind(Function const function, Argument argument);
 
     template <typename Function, typename Argument, typename... Arguments>
-    auto bind(Function const& function, Argument argument, Arguments... arguments) -> decltype(bind(details::bind_t<Function, Argument>(function, argument), arguments...));
+    auto bind(Function const function, Argument argument, Arguments... arguments) -> decltype(bind(details::bind_t<Function, Argument>(function, argument), arguments...));
+
+    template <typename Function>
+    details::reverse_bind_t<Function> bind(Function const function, details::placeholder2 const& first_argument, details::placeholder1 const& second_argument);
 } // bind & function
 
 template <typename Function, typename Argument>
@@ -154,6 +182,13 @@ fn::details::bind_t<Function, fn::details::placeholder1>& fn::details::bind_t<Fu
 }
 
 template <typename Function>
+template <typename FirstArgument, typename... Arguments>
+auto fn::details::bind_t<Function, fn::details::placeholder1>::operator()(FirstArgument first_argument, Arguments... arguments) -> decltype(function_(first_argument, arguments...))
+{
+    return function_(first_argument, arguments...);
+}
+
+template <typename Function>
 template <typename FirstArgument, typename SecondArgument, typename... Arguments>
 auto fn::details::bind_t<Function, fn::details::placeholder1>::operator()(FirstArgument first_argument, SecondArgument second_argument, Arguments... arguments) -> decltype(function_(second_argument, first_argument, arguments...))
 {
@@ -195,6 +230,13 @@ fn::details::bind_t<Function, fn::details::placeholder2>& fn::details::bind_t<Fu
 }
 
 template <typename Function>
+template <typename FirstArgument, typename SecondArgument, typename... Arguments>
+auto fn::details::bind_t<Function, fn::details::placeholder2>::operator()(FirstArgument first_argument, SecondArgument second_argument, Arguments... arguments) -> decltype(function_(second_argument, first_argument, arguments...))
+{
+    return function_(second_argument, first_argument, arguments...);
+}
+
+template <typename Function>
 template <typename FirstArgument, typename SecondArgument, typename ThirdArgument, typename... Arguments>
 auto fn::details::bind_t<Function, fn::details::placeholder2>::operator()(FirstArgument first_argument, SecondArgument second_argument, ThirdArgument third_argument, Arguments... arguments) -> decltype(function_(third_argument, first_argument, second_argument, arguments...))
 {
@@ -207,15 +249,62 @@ void fn::details::bind_t<Function, fn::details::placeholder2>::swap(BindT& other
     std::swap(function_, other.function_);
 }
 
+template <typename Function>
+fn::details::reverse_bind_t<Function>::reverse_bind_t(Function const& function)
+    : function_(function)
+{
+}
+
+template <typename Function>
+fn::details::reverse_bind_t<Function>::reverse_bind_t(BindT const& other)
+    : reverse_bind_t(other.function_)
+{
+}
+
+template <typename Function>
+fn::details::reverse_bind_t<Function>::reverse_bind_t(BindT&& other)
+    : function_(std::move(other.function_))
+{
+}
+
+template <typename Function>
+fn::details::reverse_bind_t<Function>& fn::details::reverse_bind_t<Function>::operator=(BindT other)
+{
+    if (this != &other)
+    {
+        swap(other);
+    }
+    return *this;
+}
+
+template <typename Function>
+template <typename FirstArgument, typename SecondArgument, typename... Arguments>
+auto fn::details::reverse_bind_t<Function>::operator()(FirstArgument first_argument, SecondArgument second_argument, Arguments... arguments) -> decltype(function_(second_argument, first_argument, arguments...))
+{
+    return function_(second_argument, first_argument, arguments...);
+}
+
+template <typename Function>
+void fn::details::reverse_bind_t<Function>::swap(BindT& other)
+{
+    std::swap(function_, other.function_);
+}
+
 template <typename Function, typename Argument>
-fn::details::bind_t<Function, Argument> fn::bind(Function const& function, Argument argument)
+fn::details::bind_t<Function, Argument> fn::bind(Function const function, Argument argument)
 {
     return details::bind_t<Function, Argument>(function, argument);
 }
 
 template <typename Function, typename Argument, typename... Arguments>
-auto fn::bind(Function const& function, Argument argument, Arguments... arguments) -> decltype(bind(details::bind_t<Function, Argument>(function, argument), arguments...))
+auto fn::bind(Function const function, Argument argument, Arguments... arguments) -> decltype(bind(details::bind_t<Function, Argument>(function, argument), arguments...))
 {
     details::bind_t<Function, Argument> b(function, argument);
     return bind(b, arguments...);
+}
+
+template <typename Function>
+fn::details::reverse_bind_t<Function> fn::bind(Function const function, fn::details::placeholder2 const& first_argument, fn::details::placeholder1 const& second_argument)
+{
+    return fn::details::reverse_bind_t<Function>(function);
 }
